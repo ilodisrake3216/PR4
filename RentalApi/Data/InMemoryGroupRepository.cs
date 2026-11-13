@@ -22,6 +22,11 @@ public class InMemoryGroupRepository : IGroupRepository
             return Task.FromResult(group);
         }
     }
+    public Task RemoveAsync(Group group, CancellationToken cancellationToken)
+    {
+        _items.Remove(group);
+        return Task.CompletedTask;
+    }
     private readonly List<Group> _items = new()
     {
         new() { Id = 1, Language = "Английский", Teacher = "Иван Иванов", Rating = 4.5m, Link = "https://t.me" },

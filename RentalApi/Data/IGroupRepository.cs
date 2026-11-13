@@ -4,6 +4,7 @@ namespace LanguageLearnApi.Data;
 
 public interface IGroupRepository
 {
+    Task RemoveAsync(Group group, CancellationToken cancellationToken);
     Task<IReadOnlyList<Group>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<Group> AddAsync(Group group, CancellationToken cancellationToken = default);
     Task<Group> CreateAsync(Group group, CancellationToken cancellationToken = default);

@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="LanguageSchool/LanguageSchool.csproj" Id="8c279b58-d285-4531-aa9b-58e0e847e2e1" />
   <Project Path="RentalApi/LanguageLearnApi.csproj" />
 </Solution>
