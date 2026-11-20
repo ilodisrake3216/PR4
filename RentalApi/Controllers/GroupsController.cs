@@ -147,37 +147,41 @@ public class GroupsController : ControllerBase
         return Ok(participants);
     }
 
-    /// <summary>
-    /// Добавляет нового участника в группу.
-    /// </summary>
-    /// <param name="id">Идентификатор группы.</param>
-    /// <param name="request">Данные участника.</param>
-    /// <param name="cancellationToken">Токен отмены операции.</param>
-    /// <response code="200">Участник успешно добавлен.</response>
-    /// <response code="400">Ошибка при добавлении.</response>
-    /// <response code="404">Группа не найдена.</response>
-    /// <response code="409">Участник уже состоит в этой группе.</response>
-    [HttpPost("{id}/participants")]
+    [HttpPost("{id:int}/participants")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> AddParticipant(
-        int id, [FromBody] AddParticipantRequest request, CancellationToken cancellationToken)
+        int id,
+        [FromBody] AddListenerRequest request,
+        CancellationToken cancellationToken = default)
     {
-        Group? item = await _repository.GetByIdAsync(id, cancellationToken);
-        if (item is null)
+        if (request is null || request.Listener <= 0)
+        {
+            return BadRequest("Укажите корректный ID слушателя.");
+        }
+
+        Group? group = await _repository.GetByIdAsync(id, cancellationToken);
+        if (group is null)
+        {
             return NotFound();
+        }
 
-        var participants = await _repository.GetParticipantsAsync(id, cancellationToken);
-        if (participants.Contains(request.ParticipantId))
-            return Conflict();
+        try
+        {
+            group.AddListener(request.Listener);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        catch (ArgumentOutOfRangeException ex)
+        {
+            return BadRequest(ex.Message);
+        }
 
-        var success = await _repository.AddParticipantAsync(id, request.ParticipantId, cancellationToken);
-        if (!success)
-            return BadRequest();
-
-        return Ok();
+        return Ok(group);
     }
 
     /// <summary>
@@ -309,4 +313,5 @@ public class GroupsController : ControllerBase
         _cache.Remove(CategoriesCacheKey);
         return NoContent();
     }
+
 }
