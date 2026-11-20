@@ -1,25 +1,24 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using LanguageLearnApi.Data;
 using LanguageLearnApi.Models;
-
 namespace LanguageLearnApi.Models.Controllers;
-
-/// <summary>
-/// Управление учебными группами в центре языкового обучения.
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class GroupsController : ControllerBase
 {
+    private const string CategoriesCacheKey = "groups-categories";
     private readonly IGroupRepository _repository;
     private readonly ILogger<GroupsController> _logger;
-
+    private readonly IMemoryCache _cache;
     public GroupsController(
         IGroupRepository repository,
-        ILogger<GroupsController> logger)
+        ILogger<GroupsController> logger,
+        IMemoryCache cache)
     {
         _repository = repository;
         _logger = logger;
+        _cache = cache;
     }
 
     /// <summary>
@@ -271,5 +270,43 @@ public class GroupsController : ControllerBase
             return NotFound();
 
         return Ok();
+    }
+    /// <summary>
+    /// Возвращает список уникальных языков/направлений групп (кэшируется на 10 минут).
+    /// </summary>
+    [HttpGet("categories")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetCategories(
+        CancellationToken cancellationToken)
+    {
+        List<string>? categories = await _cache.GetOrCreateAsync(
+            CategoriesCacheKey,
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                _logger.LogInformation("Категории загружены из хранилища");
+
+                IReadOnlyList<Group> items = await _repository.GetAllAsync(cancellationToken);
+
+                return items
+                    .Select(g => g.Language)
+                    .Where(c => !string.IsNullOrWhiteSpace(c))
+                    .Distinct()
+                    .OrderBy(c => c)
+                    .ToList();
+            });
+
+        return Ok(categories ?? new List<string>());
+    }
+
+    /// <summary>
+    /// Сбрасывает кэш списка категорий (языков).
+    /// </summary>
+    [HttpPost("reset-cache")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public IActionResult ResetCache()
+    {
+        _cache.Remove(CategoriesCacheKey);
+        return NoContent();
     }
 }

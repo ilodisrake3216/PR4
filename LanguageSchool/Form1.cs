@@ -75,19 +75,31 @@ public partial class Form1 : Form
         progressBar.Visible = true;
         statusLabel.Text = "Загрузка...";
         _cts = new CancellationTokenSource();
+        SetPageButtonsEnabled(false);
+
         try
         {
             var swNet = Stopwatch.StartNew();
-            var groups = await client.GetFromJsonAsync<List<Group>>("api/groups", _cts.Token);
+            PagedResult<GroupListItem>? page = await client.GetFromJsonAsync<PagedResult<GroupListItem>>(
+                $"api/groups?page={_page}&pageSize={PageSize}", _cts.Token);
             swNet.Stop();
+
+            var items = page?.Items ?? new List<GroupListItem>();
+            int total = page?.Total ?? 0;
+
+            _totalPages = Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
+            if (_page > _totalPages)
+            {
+                _page = _totalPages;
+            }
+
             var swBind = Stopwatch.StartNew();
-            equipmentGrid.DataSource = groups;
-            equipmentGrid.Columns["Language"].HeaderText = "Язык";
-            equipmentGrid.Columns["Teacher"].HeaderText = "Преподаватель";
-            equipmentGrid.Columns["Rating"].HeaderText = "Рейтинг";
-            equipmentGrid.Columns["Link"].HeaderText = "Ссылка";
+            equipmentGrid.DataSource = items;
+            SetupGridHeaders();
             swBind.Stop();
-            statusLabel.Text = $"Сеть: {swNet.ElapsedMilliseconds} мс | Таблица: {swBind.ElapsedMilliseconds} мс | Записей: {groups?.Count ?? 0}";
+
+            pageLabel.Text = $"Страница {_page} из {_totalPages}";
+            statusLabel.Text = $"Сеть: {swNet.ElapsedMilliseconds} мс | Таблица: {swBind.ElapsedMilliseconds} мс | На странице: {items.Count} из {total}";
         }
         catch (OperationCanceledException)
         {
@@ -101,6 +113,7 @@ public partial class Form1 : Form
         finally
         {
             progressBar.Visible = false;
+            SetPageButtonsEnabled(true);
         }
     }
     private void cancelButton_Click_1(object sender, EventArgs e)
@@ -227,9 +240,48 @@ public partial class Form1 : Form
             "Автор: Чернобай А.А., группа 24-ИСП-1",
             "О программе", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
+    private void SetupGridHeaders()
+    {
+        if (equipmentGrid.Columns[nameof(GroupListItem.Id)] is { } idCol)
+            idCol.HeaderText = "№";
+
+        if (equipmentGrid.Columns[nameof(GroupListItem.Language)] is { } langCol)
+            langCol.HeaderText = "Язык";
+
+        if (equipmentGrid.Columns[nameof(GroupListItem.Teacher)] is { } teacherCol)
+            teacherCol.HeaderText = "Преподаватель";
+
+        if (equipmentGrid.Columns[nameof(GroupListItem.Rating)] is { } ratingCol)
+            ratingCol.HeaderText = "Рейтинг";
+    }
+
+    private void SetPageButtonsEnabled(bool canInteract)
+    {
+        prevButton.Enabled = canInteract && _page > 1;
+        nextButton.Enabled = canInteract && _page < _totalPages;
+    }
 
     private void label4_Click(object sender, EventArgs e)
     {
 
     }
+
+    private void button1_Click(object sender, EventArgs e)
+    {
+        if (_page >= _totalPages)
+            return;
+
+        _page++;
+        loadButton.PerformClick();
+    }
+
+    private void prevButton_Click(object sender, EventArgs e)
+    {
+        if (_page <= 1)
+            return;
+
+        _page--;
+        loadButton.PerformClick();
+    }
 }
+

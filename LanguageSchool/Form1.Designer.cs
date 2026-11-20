@@ -53,6 +53,9 @@
             справкаToolStripMenuItem = new ToolStripMenuItem();
             оПрограммеToolStripMenuItem = new ToolStripMenuItem();
             руководтсвоПользователяToolStripMenuItem = new ToolStripMenuItem();
+            prevButton = new Button();
+            nextButton = new Button();
+            pageLabel = new Label();
             ((System.ComponentModel.ISupportInitialize)equipmentGrid).BeginInit();
             groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numericUpDown1).BeginInit();
@@ -131,7 +134,7 @@
             equipmentGrid.RowHeadersWidth = 62;
             equipmentGrid.RowTemplate.Height = 28;
             equipmentGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            equipmentGrid.Size = new Size(1096, 329);
+            equipmentGrid.Size = new Size(1442, 329);
             equipmentGrid.TabIndex = 5;
             // 
             // groupBox1
@@ -277,7 +280,7 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { справкаToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(1128, 33);
+            menuStrip1.Size = new Size(1474, 33);
             menuStrip1.TabIndex = 8;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -302,12 +305,46 @@
             руководтсвоПользователяToolStripMenuItem.Text = "Руководтсво пользователя";
             руководтсвоПользователяToolStripMenuItem.Click += userGuide_Click;
             // 
+            // prevButton
+            // 
+            prevButton.BackColor = Color.FromArgb(255, 255, 192);
+            prevButton.Location = new Point(1064, 479);
+            prevButton.Name = "prevButton";
+            prevButton.Size = new Size(90, 34);
+            prevButton.TabIndex = 9;
+            prevButton.Text = "<Назад";
+            prevButton.UseVisualStyleBackColor = false;
+            prevButton.Click += prevButton_Click;
+            // 
+            // nextButton
+            // 
+            nextButton.BackColor = Color.FromArgb(255, 255, 192);
+            nextButton.Location = new Point(1219, 478);
+            nextButton.Name = "nextButton";
+            nextButton.Size = new Size(107, 37);
+            nextButton.TabIndex = 10;
+            nextButton.Text = "Вперёд>";
+            nextButton.UseVisualStyleBackColor = false;
+            nextButton.Click += button1_Click;
+            // 
+            // pageLabel
+            // 
+            pageLabel.AutoSize = true;
+            pageLabel.Location = new Point(1101, 450);
+            pageLabel.Name = "pageLabel";
+            pageLabel.Size = new Size(160, 25);
+            pageLabel.TabIndex = 11;
+            pageLabel.Text = "Страница 1 из 1";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(12F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(255, 192, 128);
-            ClientSize = new Size(1128, 588);
+            ClientSize = new Size(1474, 588);
+            Controls.Add(pageLabel);
+            Controls.Add(nextButton);
+            Controls.Add(prevButton);
             Controls.Add(btnDelete);
             Controls.Add(groupBox1);
             Controls.Add(equipmentGrid);
@@ -359,5 +396,8 @@
         private ToolStripMenuItem справкаToolStripMenuItem;
         private ToolStripMenuItem оПрограммеToolStripMenuItem;
         private ToolStripMenuItem руководтсвоПользователяToolStripMenuItem;
+        private Button nextButton;
+        private Button prevButton;
+        private Label pageLabel;
     }
 }

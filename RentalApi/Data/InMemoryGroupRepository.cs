@@ -23,30 +23,57 @@ public class InMemoryGroupRepository : IGroupRepository
                 Listners = new List<int> { 1000 + i, 2000 + i }
             });
         }
+        foreach (Group item in _items)
+        {
+            _byId[item.Id] = item;
+        }
     }
+    private readonly Dictionary<int, Group> _byId = new();
+    private readonly List<Group> _sortedView = new();
+    private bool _isDirty = true;
+    public Task<IReadOnlyList<Group>> GetPageAsync(
+        int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        lock (_sync)
+        {
+            List<Group> sorted = GetSortedViewLocked();
+            IReadOnlyList<Group> items = sorted
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Task.FromResult(items);
+        }
+    }
+
     public Task<Group> AddAsync(Group group, CancellationToken cancellationToken = default)
     {
         lock (_sync)
         {
             group.Id = _nextId++;
             _items.Add(group);
+            _byId[group.Id] = group;
+            _isDirty = true;
             return Task.FromResult(group);
         }
     }
-    public Task<Group> CreateAsync(Group group, CancellationToken cancellationToken = default)
+
+    public Task RemoveAsync(Group group, CancellationToken cancellationToken)
     {
         lock (_sync)
         {
-            group.Id = _nextId++;
-            _items.Add(group);
-            return Task.FromResult(group);
+            _items.Remove(group);
+            _byId.Remove(group.Id);
+            _isDirty = true;
+            return Task.CompletedTask;
         }
     }
-    public Task RemoveAsync(Group group, CancellationToken cancellationToken)
+
+    public Task<Group> CreateAsync(Group group, CancellationToken cancellationToken = default)
     {
-        _items.Remove(group);
-        return Task.CompletedTask;
+        return AddAsync(group, cancellationToken);
     }
+
     private readonly List<Group> _items = new()
     {
         new() { Id = 1, Language = "Английский", Teacher = "Иван Иванов", Rating = 4.5m, Link = "https://t.me" },
@@ -55,12 +82,12 @@ public class InMemoryGroupRepository : IGroupRepository
     private readonly object _sync = new();
     private int _nextId = 3;
 
-    public Task<Group?> GetByIdAsync(
-        int id, CancellationToken cancellationToken = default)
+    public Task<Group?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         lock (_sync)
         {
-            return Task.FromResult(_items.FirstOrDefault(g => g.Id == id));
+            return Task.FromResult(
+                _byId.TryGetValue(id, out Group? item) ? item : null);
         }
     }
 
@@ -145,18 +172,17 @@ public class InMemoryGroupRepository : IGroupRepository
             return Task.FromResult(_items.Count);
         }
     }
-    public Task<IReadOnlyList<Group>> GetPageAsync(
-        int page, int pageSize, CancellationToken cancellationToken = default)
+    private List<Group> GetSortedViewLocked()
     {
-        lock (_sync)
+        if (_isDirty)
         {
-            IReadOnlyList<Group> items = _items
-                .OrderBy(g => g.Language)
-                .ThenBy(g => g.Id)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-            return Task.FromResult(items);
+            _sortedView.Clear();
+            _sortedView.AddRange(_items
+                .OrderBy(g => g.Language, StringComparer.Ordinal)
+                .ThenBy(g => g.Id));
+            _isDirty = false;
         }
+
+        return _sortedView;
     }
 }
