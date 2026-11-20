@@ -131,7 +131,7 @@
             equipmentGrid.RowHeadersWidth = 62;
             equipmentGrid.RowTemplate.Height = 28;
             equipmentGrid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            equipmentGrid.Size = new Size(1035, 329);
+            equipmentGrid.Size = new Size(1096, 329);
             equipmentGrid.TabIndex = 5;
             // 
             // groupBox1
@@ -277,7 +277,7 @@
             menuStrip1.Items.AddRange(new ToolStripItem[] { справкаToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(1067, 33);
+            menuStrip1.Size = new Size(1128, 33);
             menuStrip1.TabIndex = 8;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -307,7 +307,7 @@
             AutoScaleDimensions = new SizeF(12F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(255, 192, 128);
-            ClientSize = new Size(1067, 588);
+            ClientSize = new Size(1128, 588);
             Controls.Add(btnDelete);
             Controls.Add(groupBox1);
             Controls.Add(equipmentGrid);

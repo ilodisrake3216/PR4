@@ -25,4 +25,7 @@ public interface IGroupRepository
 
     Task<bool> SendPingAsync(
         int id, string message, CancellationToken cancellationToken = default);
+    Task<int> CountAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Group>> GetPageAsync(
+        int page, int pageSize, CancellationToken cancellationToken = default);
 }

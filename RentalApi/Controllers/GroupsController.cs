@@ -92,10 +92,39 @@ public class GroupsController : ControllerBase
     /// <response code="200">Список групп успешно получен.</response>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<Group>>> GetAll(CancellationToken cancellationToken)
+    /// <summary>
+    /// Возвращает страницу учебных групп.
+    /// </summary>
+    /// <param name="page">Номер страницы (начиная с 1).</param>
+    /// <param name="pageSize">Размер страницы (от 1 до 200).</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <response code="200">Страница групп успешно получена.</response>
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<GroupListItem>>> GetAll(
+    int page = 1,
+    int pageSize = 50,
+    CancellationToken cancellationToken = default)
     {
-        var items = await _repository.GetAllAsync(cancellationToken);
-        return Ok(items);
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 200);
+        int total = await _repository.CountAsync(cancellationToken);
+        IReadOnlyList<Group> items = await _repository.GetPageAsync(page, pageSize, cancellationToken);
+        var result = new PagedResult<GroupListItem>
+        {
+            Total = total,
+            Page = page,
+            PageSize = pageSize,
+            Items = items.Select(g => new GroupListItem
+            {
+                Id = g.Id,
+                Language = g.Language,
+                Teacher = g.Teacher,
+                Rating = g.Rating
+            }).ToList()
+        };
+
+        return Ok(result);
     }
 
     /// <summary>

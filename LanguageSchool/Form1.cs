@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace LanguageSchool;
 
@@ -9,6 +8,9 @@ public partial class Form1 : Form
 {
     private static readonly HttpClient client = new() { BaseAddress = new Uri("http://localhost:5248/") };
     private CancellationTokenSource? _cts;
+    private int _page = 1;
+    private int _totalPages = 1;
+    private const int PageSize = 50;
 
     public Form1()
     {
@@ -73,16 +75,19 @@ public partial class Form1 : Form
         progressBar.Visible = true;
         statusLabel.Text = "Загрузка...";
         _cts = new CancellationTokenSource();
-
         try
         {
+            var swNet = Stopwatch.StartNew();
             var groups = await client.GetFromJsonAsync<List<Group>>("api/groups", _cts.Token);
+            swNet.Stop();
+            var swBind = Stopwatch.StartNew();
             equipmentGrid.DataSource = groups;
             equipmentGrid.Columns["Language"].HeaderText = "Язык";
             equipmentGrid.Columns["Teacher"].HeaderText = "Преподаватель";
             equipmentGrid.Columns["Rating"].HeaderText = "Рейтинг";
             equipmentGrid.Columns["Link"].HeaderText = "Ссылка";
-            statusLabel.Text = $"Загружено записей: {groups?.Count ?? 0}";
+            swBind.Stop();
+            statusLabel.Text = $"Сеть: {swNet.ElapsedMilliseconds} мс | Таблица: {swBind.ElapsedMilliseconds} мс | Записей: {groups?.Count ?? 0}";
         }
         catch (OperationCanceledException)
         {
